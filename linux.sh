@@ -5,6 +5,7 @@ INSTALL_DIR="$HOME/.local/share/aisaka"
 DESKTOP_APPS="$HOME/.local/share/applications"
 ENTRY_FILE="$DESKTOP_APPS/aisaka-player.desktop"
 UNINSTALL_ENTRY_FILE="$DESKTOP_APPS/aisaka-player-uninstall.desktop"
+WINE_LOCAL="$HOME/.wine/drive_c/users/$USER/AppData/Local/Aisaka/AisakaLauncher.exe"
 
 echo "CaelusLinux b0.1"
 echo ""
@@ -28,8 +29,7 @@ if [[ "${1:-}" == "--uri" ]]; then
             gameLocale)       args+=("--gloc" "$val") ;;
         esac
     done < <(tr '+' '\n' <<< "$uri_cleaned")
-    exe="$INSTALL_DIR/AisakaLauncher.exe"
-    [[ ! -f "$exe" ]] && exit 1
+    [[ ! -f "$WINE_LOCAL" ]] && exit 1
     wine_cmd=""
     for w in wine64 wine; do
         command -v "$w" &>/dev/null && { wine_cmd="$w"; break; }
@@ -37,7 +37,7 @@ if [[ "${1:-}" == "--uri" ]]; then
     [[ -z "$wine_cmd" ]] && exit 1
     export __NV_PRIME_RENDER_OFFLOAD=1
     export __GLX_VENDOR_LIBRARY_NAME=nvidia
-    setsid "$wine_cmd" "$exe" "${args[@]}" </dev/null &>/dev/null &
+    setsid "$wine_cmd" "$WINE_LOCAL" "${args[@]}" </dev/null &>/dev/null &
     exit 0
 fi
 
@@ -75,7 +75,7 @@ if ! command -v wine &>/dev/null && ! command -v wine64 &>/dev/null; then
         apt)
             sudo dpkg --add-architecture i386 &>/dev/null
             sudo apt-get update -qq &>/dev/null
-            sudo apt-get install -y wine wine32 wine64 xdg-utils &>/dev/null
+            sudo apt-get install -y wine wine64 wine32:i386 xdg-utils &>/dev/null
             ;;
         dnf)
             sudo dnf install -y wine xdg-utils &>/dev/null
@@ -97,6 +97,17 @@ if ! command -v wine &>/dev/null && ! command -v wine64 &>/dev/null; then
 fi
 
 echo "[+] Setting Aisaka up..."
+
+wine_cmd=""
+for w in wine64 wine; do
+    command -v "$w" &>/dev/null && { wine_cmd="$w"; break; }
+done
+
+[[ -z "$wine_cmd" ]] && { echo "[!] Aisaka encountered an error, please DM vancyfancy on Discord."; exit 1; }
+
+"$wine_cmd" "$INSTALL_DIR/AisakaLauncher.exe" &>/dev/null
+
+[[ ! -f "$WINE_LOCAL" ]] && { echo "[!] Aisaka encountered an error, please DM vancyfancy on Discord."; exit 1; }
 
 SCRIPT_PATH="$(realpath "$0")"
 mkdir -p "$DESKTOP_APPS" || { echo "[!] Aisaka encountered an error, please DM vancyfancy on Discord."; exit 1; }

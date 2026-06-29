@@ -1,2 +1,3 @@
 # CaelusLinux
-linux wine bootstrapper for caelus
+linux wine bootstrapper for caelus woohoo
+made by vancy
